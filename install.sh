@@ -1,6 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
+
 ###############################################################################
 # PREPARATION FOR INSTALL
 # 1. Convert arguments to variables
@@ -58,7 +59,7 @@ fi
 
 mkfs.fat -F 32 "/dev/${BOOT_PART}"
 
-echo $USER_PASS | cryptsetup -q luksFormat -h sha512 -i 5000 -s 512 "/dev/${ROOT_PART}"
+echo $USER_PASS | cryptsetup -q luksFormat -h sha512 -i 10000 -s 512 "/dev/${ROOT_PART}"
 echo $USER_PASS | cryptsetup open "/dev/${ROOT_PART}" cryptroot
 
 mkfs.btrfs -f /dev/mapper/cryptroot
@@ -73,7 +74,7 @@ mount -o defaults,noatime "/dev/${BOOT_PART}" /mnt/boot
 # 1. Optimize pacman DL speed with an updated mirrorlist parallel downloads
 # 2. Sync the package database and keyring as it can be dated in the live ISO
 # 3. Install the base system and low level components into the new install
-# 4. Generated the Filesystem Table
+# 4. Generate the filesystem table
 # 5. Stage my dotfiles into the new install before chrooting into it
 ###############################################################################
 
@@ -177,9 +178,8 @@ echo "user ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/00_user
 chmod 440 /etc/sudoers.d/00_user
 
 pacman -S --noconfirm --needed git
-cd /tmp
-git clone https://aur.archlinux.org/yay.git
-cd yay
+git clone https://aur.archlinux.org/yay.git /tmp/yay
+cd /tmp/yay
 runuser -l user -c 'makepkg -si --noconfirm'
 runuser -l user -c 'yay -S --noconfirm --needed btrfs-progs hyprland hyprpaper hyprshot iwd keepassxc librewolf-bin mullvad-vpn-cli noto-fonts openrgb pipewire-jack pipewire-pulse python-nvidia-ml-py vscodium-bin'
 
@@ -205,6 +205,7 @@ chmod 440 /etc/sudoers.d/00_user
 # 7. Pre-configure my NextDNS profile via resolved
 # 8. Pre-configure Mullvad VPN with hardened settings
 # 9. Pre-configure Git
+# 9. Pre-configure LibreWolf
 ###############################################################################
 
 cat <<'HYPR' > /home/user/.bash_profile
@@ -279,6 +280,11 @@ runuser -l user -c 'git config --global user.email "$GIT_MAIL"'
 runuser -l user -c 'git config --global user.signingkey $GIT_KEY'
 runuser -l user -c 'git config --global commit.gpgSign true'
 
+git clone https://github.com/rafaelmardojai/firefox-gnome-theme.git /tmp/fgt
+mkdir -p /home/user/.librewolf/user/chrome
+mv /tmp/fgt/theme /home/user/.librewolf/user/chrome
+mv /tmp/fgt/userChrome.css /home/user/.librewolf/user/chrome
+mv /tmp/fgt/configuration/user.js /home/user/.librewolf/user
 
 ###############################################################################
 # WRAPPING UP THE INSTALL
