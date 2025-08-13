@@ -59,7 +59,7 @@ fi
 mkfs.fat -F 32 "/dev/${BOOT_PART}"
 
 echo $USER_PASS | cryptsetup -q luksFormat -h sha512 -i 5000 -s 512 "/dev/${ROOT_PART}"
-echo $USER_PASS | cryptsetup open "/dev/${ROOT_PART}" cryptroot -
+echo $USER_PASS | cryptsetup open "/dev/${ROOT_PART}" cryptroot
 
 mkfs.btrfs -f /dev/mapper/cryptroot
 
