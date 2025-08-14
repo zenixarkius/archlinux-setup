@@ -14,9 +14,9 @@ while [[ "$#" -gt 0 ]]; do
     case $1 in
         -b) BOOT_PART="$2"; shift ;;
         -r) ROOT_PART="$2"; shift ;;
-        -u) USER_PASS="$2"; shift ;;
-        -nd) NEXTDNS="$2"; shift ;;
-        -mv) MULLVAD="$2"; shift ;;
+        -p) USER_PASS="$2"; shift ;;
+        -n) NEXTDNS="$2"; shift ;;
+        -m) MULLVAD="$2"; shift ;;
         -wi) WIFI_INT="$2"; shift ;;
         -wn) WIFI_NAME="$2"; shift ;;
         -wp) WIFI_PASS="$2"; shift ;;
@@ -86,8 +86,9 @@ pacstrap -K /mnt base base-devel intel-ucode linux linux-firmware nvidia sbctl
 genfstab -U /mnt >> /mnt/etc/fstab
 
 mkdir -p /mnt/dottmp
-cp $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../dotfiles/.bashrc /mnt/dottmp
-cp -r $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../dotfiles/.config/hypr /mnt/dottmp/hypr
+cp $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/bash/.bashrc /mnt/dottmp
+cp $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/services/custom.service /mnt/dottmp
+cp -r $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/hypr /mnt/dottmp/hypr
 arch-chroot /mnt /bin/bash <<CHROOT
 
 
@@ -125,6 +126,7 @@ echo "user:$USER_PASS" | chpasswd
 ln -s /tmp /home/user/.cache
 
 mv /dottmp/.bashrc /home/user
+mv /dottmp/custom.service /etc/systemd/system/
 mv /dottmp/hypr /home/user/.config
 rmdir /dottmp
 
@@ -176,8 +178,7 @@ chmod 440 /etc/sudoers.d/00_user
 
 pacman -S --noconfirm --needed git
 git clone https://aur.archlinux.org/yay.git /tmp/yay
-cd /tmp/yay
-runuser -l user -c 'makepkg -si --noconfirm'
+runuser -l user -c 'cd /tmp/yay && makepkg -si --noconfirm'
 runuser -l user -c 'yay -S --noconfirm --needed \
 btrfs-progs \
 hyprland \
@@ -207,52 +208,24 @@ chmod 440 /etc/sudoers.d/00_user
 
 
 ###############################################################################
-# DOTFILES AND CONFIGS
-# 1. Create a bash profile to automatically start hyprland on sign in
-# 2. Configure getty to autologin the user for convenience
-# 3. Create my custom systemd service file
-# 4. Configure PAM no-password login because there's little security loss
-# 5. Fix .pulse-cookie bug with Steam
-# 6. Disable coredumps as theyre HUGE and I don't care about them
-# 7. Pre-configure my NextDNS profile via resolved
-# 8. Pre-configure Mullvad VPN with hardened settings
+# SETTING CONFIGURATIONS
+# 1. Set a .bash_profile to automatically start hyprland on tty1 sign in
+# 2. Set getty to autologin the user for convenience
+# 3. Configure PAM no-password login because there's little security loss
+# 4. Fix ~/.pulse-cookie bug with Steam
+# 5. Disable coredumps as they're HUGE and I don't care about them
+# 6. Configure my hardened NextDNS profile via resolved
+# 7. Configure Mullvad VPN with hardened settings
 ###############################################################################
 
-cat <<'HYPR' > /home/user/.bash_profile
-#
-# ~/.bash_profile
-#
-
-[[ -f ~/.bashrc ]] && . ~/.bashrc
-
-if [[ -z \$DISPLAY ]] && [[ \$(tty) = /dev/tty1 ]]; then
-  exec hyprland
-fi
-HYPR
+echo "if [[ -z \$DISPLAY ]] && [[ \$(tty) = /dev/tty1 ]]; then" >> /home/user/.bash_profile
+echo "    exec hyprland" >> /home/user/.bash_profile
+echo "fi" >> /home/user/.bash_profile
 
 mkdir -p /etc/systemd/system/getty@tty1.service.d
-cat <<'GETTY' > /etc/systemd/system/getty@tty1.service.d/override.conf
-[Service]
-ExecStart=
-ExecStart=-/sbin/agetty -o '-- \\u' --autologin user --noreset --noclear - \${TERM}
-GETTY
-
-cat <<CUSTOM > /etc/systemd/system/custom.service
-[Unit]
-Description=Setup NVIDIA overclocks, OpenRGB lighting, and fix my DNS resolver tug-of-war between resolved and Mullvad thanks to my barebones network stack.
-
-[Service]
-WorkingDirectory=/tmp
-ExecStart=/bin/bash -c '\
-/usr/bin/env python -c "from pynvml import *; nvmlInit(); myGPU = nvmlDeviceGetHandleByIndex(0); nvmlDeviceSetGpcClkVfOffset(myGPU, 210); nvmlDeviceSetMemClkVfOffset(myGPU, 3000)" && \
-/usr/bin/openrgb --mode static --color 1f13d4 --brightness 100 && \
-while ! resolvectl status wg0-mullvad | grep -q "DNS Domain:"; do sleep 0.5; done && \
-/usr/bin/resolvectl domain wg0-mullvad "" \
-'
-
-[Install]
-WantedBy=multi-user.target
-CUSTOM
+echo "[Service]" > /etc/systemd/system/getty@tty1.service.d/override.conf
+echo "ExecStart=" >> /etc/systemd/system/getty@tty1.service.d/override.conf
+echo "ExecStart=-/sbin/agetty -o '-- \\\\u' --autologin user --noreset --noclear - \${TERM}" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 
 sed -i '/pam_nologin.so/i auth       sufficient   pam_succeed_if.so user = user' /etc/pam.d/login
 
