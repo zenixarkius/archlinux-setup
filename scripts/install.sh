@@ -86,8 +86,8 @@ pacstrap -K /mnt base base-devel intel-ucode linux linux-firmware nvidia sbctl
 genfstab -U /mnt >> /mnt/etc/fstab
 
 mkdir -p /mnt/dottmp
-cp $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/dotfiles/.bashrc /mnt/dottmp
-cp -r $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/dotfiles/.config/hypr /mnt/dottmp/hypr
+cp $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../dotfiles/.bashrc /mnt/dottmp
+cp -r $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../dotfiles/.config/hypr /mnt/dottmp/hypr
 arch-chroot /mnt /bin/bash <<CHROOT
 
 
@@ -211,8 +211,8 @@ chmod 440 /etc/sudoers.d/00_user
 # 1. Create a bash profile to automatically start hyprland on sign in
 # 2. Configure getty to autologin the user for convenience
 # 3. Create my custom systemd service file
-# 4. Fix .pulse-cookie bug with Steam
-# 5. Configure PAM no-password login because there's little security loss
+# 4. Configure PAM no-password login because there's little security loss
+# 5. Fix .pulse-cookie bug with Steam
 # 6. Disable coredumps as theyre HUGE and I don't care about them
 # 7. Pre-configure my NextDNS profile via resolved
 # 8. Pre-configure Mullvad VPN with hardened settings
@@ -254,9 +254,9 @@ while ! resolvectl status wg0-mullvad | grep -q "DNS Domain:"; do sleep 0.5; don
 WantedBy=multi-user.target
 CUSTOM
 
-sed -i 's|^; cookie-file =.*|cookie-file = ~/.config/pulse/cookie|' /etc/pulse/client.conf
-
 sed -i '/pam_nologin.so/i auth       sufficient   pam_succeed_if.so user = user' /etc/pam.d/login
+
+sed -i 's|^; cookie-file =.*|cookie-file = ~/.config/pulse/cookie|' /etc/pulse/client.conf
 
 sed -i 's/^#Storage=.*/Storage=none/' /etc/systemd/coredump.conf
 sed -i 's/^#ProcessSizeMax=.*/ProcessSizeMax=0/' /etc/systemd/coredump.conf
