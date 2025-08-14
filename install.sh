@@ -17,9 +17,6 @@ while [[ "$#" -gt 0 ]]; do
         -u) USER_PASS="$2"; shift ;;
         -nd) NEXTDNS="$2"; shift ;;
         -mv) MULLVAD="$2"; shift ;;
-        -gu) GIT_USER="$2"; shift ;;
-        -gm) GIT_MAIL="$2"; shift ;;
-        -gk) GIT_KEY="$2"; shift ;;
         -wi) WIFI_INT="$2"; shift ;;
         -wn) WIFI_NAME="$2"; shift ;;
         -wp) WIFI_PASS="$2"; shift ;;
@@ -136,8 +133,8 @@ rmdir /dottmp
 # SETTING UP THE BOOT PROCESS
 # 1. Setup kernel options, including NVIDIA ones for gaming performance
 # 2. Create a UKI preset so that I don't need bootloader overhead
-#    - UKI's securitywise synergize well with Secure Boot and disk encryption
-#      This is currently the only way to prevent initramfs tampering
+#    - UKI's securitywise synergize well with Secure Boot and disk encryption,
+#      this is currently the only way to prevent initramfs tampering
 # 3. Add encrypt to mkinitcpio hooks and regenerate the initramfs
 # 4. Setup secure boot keys and sign the UKI
 ###############################################################################
@@ -168,7 +165,7 @@ fi
 ###############################################################################
 # SETTING UP THE USER PACKAGES
 # 1. Temporarily allow the user to use passwordless sudo for yay
-# 2. Install yay and then my preffered packages
+# 2. Install yay and then my preferred packages
 # 3. Annihilate the orphans and build files
 # 4. Set depended-upon packages to dependency status
 # 5. Revoke passwordless sudo form the user for security
@@ -181,7 +178,22 @@ pacman -S --noconfirm --needed git
 git clone https://aur.archlinux.org/yay.git /tmp/yay
 cd /tmp/yay
 runuser -l user -c 'makepkg -si --noconfirm'
-runuser -l user -c 'yay -S --noconfirm --needed btrfs-progs hyprland hyprpaper hyprshot iwd keepassxc librewolf-bin mullvad-vpn-cli noto-fonts openrgb pipewire-jack pipewire-pulse python-nvidia-ml-py vscodium-bin'
+runuser -l user -c 'yay -S --noconfirm --needed \
+btrfs-progs \
+hyprland \
+hyprpaper \
+hyprshot \
+iwd \
+keepassxc \
+librewolf-bin \
+mullvad-vpn-cli \
+noto-fonts \
+openrgb \
+pipewire-jack \
+pipewire-pulse \
+python-nvidia-ml-py \
+signal-desktop \
+vscodium-bin'
 
 pacman -Rcns --noconfirm $(pacman -Qttdq)
 pacman -Yc --noconfirm
@@ -199,13 +211,11 @@ chmod 440 /etc/sudoers.d/00_user
 # 1. Create a bash profile to automatically start hyprland on sign in
 # 2. Configure getty to autologin the user for convenience
 # 3. Create my custom systemd service file
-# 4. Pre-configure my preferred VSCodium environment
-# 5. Fix .pulse-cookie bug with Steam
+# 4. Fix .pulse-cookie bug with Steam
+# 5. Configure PAM no-password login because there's little security loss
 # 6. Disable coredumps as theyre HUGE and I don't care about them
 # 7. Pre-configure my NextDNS profile via resolved
 # 8. Pre-configure Mullvad VPN with hardened settings
-# 9. Pre-configure Git
-# 9. Pre-configure LibreWolf
 ###############################################################################
 
 cat <<'HYPR' > /home/user/.bash_profile
@@ -244,22 +254,9 @@ while ! resolvectl status wg0-mullvad | grep -q "DNS Domain:"; do sleep 0.5; don
 WantedBy=multi-user.target
 CUSTOM
 
-mkdir -p /home/user/.config/VSCodium/User
-cat <<VSCODIUM > /home/user/.config/VSCodium/User/settings.json
-{
-    "window.menuBarVisibility": "toggle",
-    "window.customTitleBarVisibility": "never",
-    "window.titleBarStyle": "native",
-    "workbench.activityBar.location": "hidden",
-    "workbench.startupEditor": "none",
-    "explorer.confirmDragAndDrop": false,
-    "workbench.statusBar.visible": false,
-    "git.enableSmartCommit": true,
-    "editor.wordWrap": "on"
-}
-VSCODIUM
-
 sed -i 's|^; cookie-file =.*|cookie-file = ~/.config/pulse/cookie|' /etc/pulse/client.conf
+
+sed -i '/pam_nologin.so/i auth       sufficient   pam_succeed_if.so user = user' /etc/pam.d/login
 
 sed -i 's/^#Storage=.*/Storage=none/' /etc/systemd/coredump.conf
 sed -i 's/^#ProcessSizeMax=.*/ProcessSizeMax=0/' /etc/systemd/coredump.conf
@@ -275,16 +272,6 @@ mullvad relay set location any
 mullvad auto-connect set on
 mullvad lockdown-mode set on
 
-runuser -l user -c 'git config --global user.name "$GIT_USER"'
-runuser -l user -c 'git config --global user.email "$GIT_MAIL"'
-runuser -l user -c 'git config --global user.signingkey $GIT_KEY'
-runuser -l user -c 'git config --global commit.gpgSign true'
-
-git clone https://github.com/rafaelmardojai/firefox-gnome-theme.git /tmp/fgt
-mkdir -p /home/user/.librewolf/user/chrome
-mv /tmp/fgt/theme /home/user/.librewolf/user/chrome
-mv /tmp/fgt/userChrome.css /home/user/.librewolf/user/chrome
-mv /tmp/fgt/configuration/user.js /home/user/.librewolf/user
 
 ###############################################################################
 # WRAPPING UP THE INSTALL
