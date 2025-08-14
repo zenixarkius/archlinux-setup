@@ -2,14 +2,11 @@
 set -euo pipefail
 
 
-###############################################################################
+#################################################################################
 # PREPARATION FOR INSTALL
-# 1. Convert arguments to variables
-# 2. Prompt the user for basic safety
-# 3. Setup Wi-Fi and timezone
-# 4. Check if this is a repeat attempt and unmount affected partitions
-###############################################################################
+#################################################################################
 
+### Convert arguments to variables
 while [[ "$#" -gt 0 ]]; do
     case $1 in
         -b) BOOT_PART="$2"; shift ;;
@@ -25,138 +22,133 @@ while [[ "$#" -gt 0 ]]; do
     shift
 done
 
+### Prompt the user for basic safety
 read -rp $'\e[31mThis script will wipe everything and reformat. Type "IK" to continue: \e[0m' confirm
 if [[ "$confirm" != "IK" ]]; then
   echo -e "\e[31mAborting.\e[0m"
   exit 1
 fi
 
-if ! ping -c 1 archlinux.org &>/dev/null; then
-    iwctl --passphrase $WIFI_PASS station $WIFI_INT connect $WIFI_NAME
-fi
-
-timedatectl set-timezone America/New_York
-
+### Check if this is a repeat attempt and unmount affected partitions
 if mountpoint -q /mnt; then
     umount -R /mnt
     cryptsetup close cryptroot
 fi
 
+### Setup Wi-Fi and timezone
+if ! ping -c 1 archlinux.org &>/dev/null; then
+    iwctl --passphrase $WIFI_PASS station $WIFI_INT connect $WIFI_NAME
+fi
+timedatectl set-timezone America/New_York
 
-###############################################################################
+
+#################################################################################
 # DISK CONFIGURATION
-# 1. Format the esp partition with FAT32
-# 2. Create a hardened LUKS-encrypted container on the root partition
-# 3. Format the container with Btrfs
-#    - No subvolumes because I just don't like them and I don't use snapshots
-# 4. Mount the formatted partitions with optimized settings
-#    - Defaults are already optimized and noatime is free performance
-#    - `compress-force=zstd:3` shrinks my base install from 18GB to 4.5GB!!
-###############################################################################
+#################################################################################
 
+### Format the esp partition with FAT32
 mkfs.fat -F 32 "/dev/${BOOT_PART}"
 
+### Create a hardened LUKS-encrypted container on the root partition
 echo $USER_PASS | cryptsetup -q luksFormat -h sha512 -i 10000 -s 512 "/dev/${ROOT_PART}"
 echo $USER_PASS | cryptsetup open "/dev/${ROOT_PART}" cryptroot
 
+### Format the container with Btrfs
+###     - No subvolumes because I just don't like them and I don't use snapshots
 mkfs.btrfs -f /dev/mapper/cryptroot
 
+### Mount the formatted partitions with optimized settings
+###     - Defaults are already optimized and noatime is free performance
+###     - `compress-force=zstd:3` shrinks my base install from 18GB to 4.5GB!!
 mount -o defaults,noatime,compress-force=zstd:3 /dev/mapper/cryptroot /mnt
 mkdir -p /mnt/boot
 mount -o defaults,noatime "/dev/${BOOT_PART}" /mnt/boot
 
 
-###############################################################################
+#################################################################################
 # BOOTSTRAPPING THE NEW SYSTEM
-# 1. Optimize pacman DL speed with an updated mirrorlist parallel downloads
-# 2. Sync the package database and keyring as it can be dated in the live ISO
-# 3. Install the base system and low level components into the new install
-# 4. Generate the filesystem table
-# 5. Stage my dotfiles into the new install before chrooting into it
-###############################################################################
+#################################################################################
 
+### Optimize pacman DL speed with an updated mirrorlist parallel downloads
 reflector -c US -p https -a 12 -l 20 -f 5 --sort rate --save /etc/pacman.d/mirrorlist
 sed -i 's/^#\(ParallelDownloads = 5\)/\1/' /etc/pacman.conf
 
+### Sync the package database and keyring as it can be dated in the live ISO
 pacman -Sy
 pacman -S --noconfirm archlinux-keyring
 
+### Install the base system and low level components into the new install
 pacstrap -K /mnt base base-devel intel-ucode linux linux-firmware nvidia sbctl
 
+### Generate the filesystem table
 genfstab -U /mnt >> /mnt/etc/fstab
 
+### Stage my dotfiles into the new install to be moved later
 mkdir -p /mnt/dottmp
-cp $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/bash/.bashrc /mnt/dottmp
-cp $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/services/custom.service /mnt/dottmp
-cp -r $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/hypr /mnt/dottmp/hypr
+cp -r $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd) /mnt/dottmp
+
+### Change root to the new install
 arch-chroot /mnt /bin/bash <<CHROOT
 
 
-###############################################################################
+#################################################################################
 # SETTING UP THE NEW SYSTEM
-# 1. Synchronize the system and hardware clocks with my timezone
-# 2. Make resolv.conf a stub so that its managed by systemd-resolved
-# 3. Generate the locale
-# 4. Set the hostname to something generic
-# 5. Set the root password then disable root for extra security
-# 6. Create the new user with a generic name
-# 7. Symlink .cache to tmp to wipe it on shutdown
-# 8. Move staged dotfiles from earlier into their proper locations
-###############################################################################
+#################################################################################
 
+### Synchronize the system and hardware clocks with my timezone
 ln -sf "/usr/share/zoneinfo/America/New_York" /etc/localtime
 hwclock --systohc
 timedatectl set-ntp true
 
+### Make resolv.conf managed by systemd-resolved
 rm /etc/resolv.conf
 ln -s /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
+### Generate the locale
 sed -i 's/^#\(en_US.UTF-8 UTF-8\)/\1/' /etc/locale.gen
 locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
 
+### Set the hostname to something generic
 echo archlinux > /etc/hostname
 
+### Set the root password then disable root for extra security
 echo "root:$USER_PASS" | chpasswd
 passwd --lock root
 
+### Create the new user with a generic name
 useradd -m user
 echo "user:$USER_PASS" | chpasswd
 
+### Symlink .cache to tmp to wipe it on shutdown
 ln -s /tmp /home/user/.cache
 
-mv /dottmp/.bashrc /home/user
-mv /dottmp/custom.service /etc/systemd/system/
-mv /dottmp/hypr /home/user/.config
-rmdir /dottmp
-
-
-###############################################################################
+#################################################################################
 # SETTING UP THE BOOT PROCESS
-# 1. Setup kernel options, including NVIDIA ones for gaming performance
-# 2. Create a UKI preset so that I don't need bootloader overhead
-#    - UKI's securitywise synergize well with Secure Boot and disk encryption,
-#      this is currently the only way to prevent initramfs tampering
-# 3. Add encrypt to mkinitcpio hooks and regenerate the initramfs
-# 4. Setup secure boot keys and sign the UKI
-###############################################################################
+#################################################################################
 
+### Setup kernel options, including NVIDIA ones for gaming performance
 mkdir -p /etc/kernel
 echo "cryptdevice=UUID=$(blkid -s UUID -o value /dev/"${ROOT_PART}"):cryptroot root=/dev/mapper/cryptroot rw nvidia.NVreg_EnableGpuFirmware=0 nvidia.NVreg_UsePageAttributeTable=1" > /etc/kernel/cmdline
 
-cat <<EOF > /etc/mkinitcpio.d/linux.preset
+### Create a UKI preset so that I don't need bootloader overhead
+###     - UKI's securitywise synergize well with Secure Boot and disk encryption,
+###       this is currently the only way to prevent initramfs tampering
+cat <<UKI > /etc/mkinitcpio.d/linux.preset
 ALL_config="/etc/mkinitcpio.conf"
 ALL_kver="/boot/vmlinuz-linux"
 PRESETS=('default')
 
 default_uki="/boot/EFI/BOOT/BOOTX64.EFI"
 default_options="--cmdline /etc/kernel/cmdline"
-EOF
+UKI
 
+## Add encrypt to mkinitcpio hooks and regenerate the initramfs
 sed -i 's/^HOOKS=.*/HOOKS=(base udev autodetect microcode modconf kms keyboard keymap consolefont block encrypt filesystems fsck)/' /etc/mkinitcpio.conf
 mkdir -p /boot/EFI/BOOT
 mkinitcpio -p linux
 
+### Setup secure boot keys and sign the UKI
 if sbctl status | grep -q "Setup Mode:     ✘ Enabled"; then
     sbctl create-keys
     sbctl enroll-keys --microsoft
@@ -164,18 +156,15 @@ if sbctl status | grep -q "Setup Mode:     ✘ Enabled"; then
 fi
 
 
-###############################################################################
+#################################################################################
 # SETTING UP THE USER PACKAGES
-# 1. Temporarily allow the user to use passwordless sudo for yay
-# 2. Install yay and then my preferred packages
-# 3. Annihilate the orphans and build files
-# 4. Set depended-upon packages to dependency status
-# 5. Revoke passwordless sudo form the user for security
-###############################################################################
+#################################################################################
 
+### Temporarily allow the user to use passwordless sudo for yay
 echo "user ALL=(ALL) NOPASSWD: ALL" > /etc/sudoers.d/00_user
 chmod 440 /etc/sudoers.d/00_user
 
+### Install yay and then my preferred packages
 pacman -S --noconfirm --needed git
 git clone https://aur.archlinux.org/yay.git /tmp/yay
 runuser -l user -c 'cd /tmp/yay && makepkg -si --noconfirm'
@@ -196,74 +185,87 @@ python-nvidia-ml-py \
 signal-desktop \
 vscodium-bin'
 
+### Annihilate the orphans and build files
 pacman -Rcns --noconfirm $(pacman -Qttdq)
 pacman -Yc --noconfirm
 rm -rf /home/user/.cargo
 rm -rf /home/user/.config/go
 
+### Set depended-upon packages to dependency status
 pacman -D --asdeps git noto-fonts pipewire-jack
 
+### Revoke passwordless sudo form the user for security
 echo "user ALL=(ALL) ALL" > /etc/sudoers.d/00_user
 chmod 440 /etc/sudoers.d/00_user
 
 
-###############################################################################
+#################################################################################
 # SETTING CONFIGURATIONS
-# 1. Set a .bash_profile to automatically start hyprland on tty1 sign in
-# 2. Set getty to autologin the user for convenience
-# 3. Configure PAM no-password login because there's little security loss
-# 4. Fix ~/.pulse-cookie bug with Steam
-# 5. Disable coredumps as they're HUGE and I don't care about them
-# 6. Configure my hardened NextDNS profile via resolved
-# 7. Configure Mullvad VPN with hardened settings
-###############################################################################
+#################################################################################
 
+### Setup dotfiles that were staged earlier
+mkdir -p /home/user/.librewolf/user/chrome
+git clone https://github.com/rafaelmardojai/firefox-gnome-theme.git /tmp/fgt
+mv /tmp/fgt/theme /home/user/.librewolf/user/chrome
+mv /tmp/fgt/userChrome.css /home/user/.librewolf/user/chrome
+mv /dottmp/librewolf/user.js /home/user/.librewolf/user
+mv /dottmp/bash/.bashrc /home/user
+mv /dottmp/services/custom.service /etc/systemd/system/
+mv /dottmp/hypr /home/user/.config
+rm -rf /dottmp
+
+### Set a .bash_profile to automatically start hyprland on tty1 sign in
 echo "if [[ -z \$DISPLAY ]] && [[ \$(tty) = /dev/tty1 ]]; then" >> /home/user/.bash_profile
 echo "    exec hyprland" >> /home/user/.bash_profile
 echo "fi" >> /home/user/.bash_profile
 
+### Set getty to autologin the user for convenience
 mkdir -p /etc/systemd/system/getty@tty1.service.d
 echo "[Service]" > /etc/systemd/system/getty@tty1.service.d/override.conf
 echo "ExecStart=" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 echo "ExecStart=-/sbin/agetty -o '-- \\\\u' --autologin user --noreset --noclear - \${TERM}" >> /etc/systemd/system/getty@tty1.service.d/override.conf
 
+### Configure PAM no-password login because there's little security loss for extra convenience
 sed -i '/pam_nologin.so/i auth       sufficient   pam_succeed_if.so user = user' /etc/pam.d/login
 
-sed -i 's|^; cookie-file =.*|cookie-file = ~/.config/pulse/cookie|' /etc/pulse/client.conf
+### Fix ~/.pulse-cookie bug with Steam
+sed -i 's|^; cookie-file =.*|cookie-file = /home/user/.config/pulse/cookie|' /etc/pulse/client.conf
 
+### Disable coredumps as they're HUGE and I don't care about them
 sed -i 's/^#Storage=.*/Storage=none/' /etc/systemd/coredump.conf
 sed -i 's/^#ProcessSizeMax=.*/ProcessSizeMax=0/' /etc/systemd/coredump.conf
 
+### Configure my hardened NextDNS profile via resolved
 sed -i "s|^#DNS=.*|DNS=45.90.28.0#${NEXTDNS}.dns.nextdns.io|" /etc/systemd/resolved.conf
 sed -i "/^DNS=45.90.28.0#/a DNS=2a07:a8c0::#${NEXTDNS}.dns.nextdns.io\nDNS=45.90.30.0#${NEXTDNS}.dns.nextdns.io\nDNS=2a07:a8c1::#${NEXTDNS}.dns.nextdns.io" /etc/systemd/resolved.conf
 sed -i 's/^#FallbackDNS=.*/FallbackDNS=/' /etc/systemd/resolved.conf
 sed -i 's/^#Domains=.*/Domains=~/' /etc/systemd/resolved.conf
 sed -i 's/^#DNSOverTLS=.*/DNSOverTLS=yes/' /etc/systemd/resolved.conf
 
+### Configure Mullvad VPN with hardened settings
 mullvad account login $MULLVAD
 mullvad relay set location any
 mullvad auto-connect set on
 mullvad lockdown-mode set on
 
 
-###############################################################################
+#################################################################################
 # WRAPPING UP THE INSTALL
-# 1. Ensure the user owns their own home
-# 2. Disable NVIDA services irrelevant to my desktop
-# 3. Enable filesystem maintainence timers
-# 4. Enable essential networking services
-# 5. Exit chroot, unmount partitions, and reboot into the new install
-###############################################################################
+#################################################################################
 
+### Ensure the user owns their own home
 chown -R user:user /home/user
 
+### Disable NVIDIA services irrelevant to my desktop
 systemctl disable nvidia-hibernate
 systemctl disable nvidia-resume
 systemctl disable nvidia-suspend
 
+### Enable filesystem maintainence timers
 systemctl enable fstrim.timer
 systemctl enable btrfs-scrub@-.timer
 
+### Enable essential networking services
 systemctl enable custom
 systemctl enable iwd
 systemctl enable iptables
@@ -271,6 +273,7 @@ systemctl enable mullvad-daemon
 systemctl enable systemd-resolved
 systemctl enable systemd-timesyncd
 
+### Exit chroot, unmount partitions, and reboot into the new install
 CHROOT
 umount -R /mnt
 cryptsetup close cryptroot
