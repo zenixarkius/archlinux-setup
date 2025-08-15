@@ -163,11 +163,22 @@ chmod 440 /etc/sudoers.d/00_user
 ### Install yay and then my preferred packages
 pacman -S --noconfirm --needed git
 sudo -u user bash <<'YAY'
-git clone https://aur.archlinux.org/yay.git /tmp/yay
+#git clone https://aur.archlinux.org/yay.git /tmp/yay
+git clone --branch yay --single-branch https://github.com/archlinux/aur.git /tmp/yay
 cd /tmp/yay && makepkg -si --noconfirm
-yay -S --noconfirm --needed btrfs-progs hyprland hyprpaper hyprshot iwd keepassxc librewolf-bin mullvad-vpn-cli noto-fonts openrgb pipewire-jack pipewire-pulse python-nvidia-ml-py signal-desktop vscodium-bin
+#yay -S --noconfirm --needed btrfs-progs hyprland hyprpaper hyprshot iwd keepassxc librewolf-bin mullvad-vpn-cli noto-fonts openrgb pipewire-jack pipewire-pulse python-nvidia-ml-py signal-desktop vscodium-bin
+yay -S --noconfirm --needed btrfs-progs hyprland hyprpaper hyprshot iwd keepassxc noto-fonts openrgb pipewire-jack pipewire-pulse signal-desktop
+git clone --branch librewolf-bin --single-branch https://github.com/archlinux/aur.git /tmp/librewolf-bin
+cd /tmp/librewolf-bin && makepkg -si --noconfirm --skipinteg
+git clone --branch mullvad-vpn-cli --single-branch https://github.com/archlinux/aur.git /tmp/mullvad-vpn-cli
+cd /tmp/mullvad-vpn-cli && makepkg -si --noconfirm
+git clone --branch python-nvidia-ml-py --single-branch https://github.com/archlinux/aur.git /tmp/python-nvidia-ml-py
+cd /tmp/python-nvidia-ml-py && makepkg -si --noconfirm
+git clone --branch vscodium-bin --single-branch https://github.com/archlinux/aur.git /tmp/vscodium-bin
+cd /tmp/vscodium-bin && makepkg -si --noconfirm
 
 ### Annihilate the orphans and build files
+yay -Rcns librewolf-debug mullvad-vpn-cli-debug vscodium-bin-debug python-setuptools
 yay -Yc --noconfirm
 rm -rf /home/user/.cargo
 rm -rf /home/user/.config/go
@@ -186,8 +197,9 @@ chmod 440 /etc/sudoers.d/00_user
 #################################################################################
 
 ### Setup dotfiles that were staged earlier
+mv /dottmp/.config/* /home/user/.config
 mv /dottmp/.* /home/user
-rmdir /dottmp
+rm -rf /dottmp
 mkdir -p /home/user/.librewolf/user/chrome
 git clone https://github.com/rafaelmardojai/firefox-gnome-theme.git /tmp/fgt
 mv /tmp/fgt/theme /home/user/.librewolf/user/chrome

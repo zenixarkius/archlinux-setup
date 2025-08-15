@@ -19,6 +19,7 @@ user_pref("middlemouse.paste", false);
 user_pref("browser.search.separatePrivateDefault", false);
 user_pref("browser.translations.enable", false);
 user_pref("browser.newtabpage.activity-stream.showSearch", false);
+user_pref("browser.urlbar.showSearchTerms.enabled", false);
 user_pref("browser.urlbar.suggest.recentsearches", false);
 user_pref("browser.urlbar.suggest.bookmark", false);
 user_pref("browser.urlbar.suggest.engines", false);
