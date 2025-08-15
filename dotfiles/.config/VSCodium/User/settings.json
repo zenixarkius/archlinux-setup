@@ -1,0 +1,11 @@
+{
+    "window.titleBarStyle": "native",
+    "workbench.startupEditor": "none",
+    "explorer.confirmDragAndDrop": false,
+    "workbench.statusBar.visible": false,
+    "editor.wordWrap": "on",
+    "window.menuBarVisibility": "toggle",
+    "workbench.activityBar.location": "top",
+    "window.customTitleBarVisibility": "never",
+    "git.enableSmartCommit": true
+}

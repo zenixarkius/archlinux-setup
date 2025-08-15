@@ -36,7 +36,7 @@ if mountpoint -q /mnt; then
 fi
 
 ### Setup Wi-Fi and timezone
-if ! ping -c 1 archlinux.org &>/dev/null; then
+if ! ping -c 1 ping.archlinux.org &>/dev/null; then
     iwctl --passphrase $WIFI_PASS station $WIFI_INT connect $WIFI_NAME
 fi
 timedatectl set-timezone America/New_York
@@ -50,7 +50,7 @@ timedatectl set-timezone America/New_York
 mkfs.fat -F 32 "/dev/${BOOT_PART}"
 
 ### Create a hardened LUKS-encrypted container on the root partition
-echo $USER_PASS | cryptsetup -q luksFormat -h sha512 -i 10000 -s 512 "/dev/${ROOT_PART}"
+echo $USER_PASS | cryptsetup -q luksFormat -h sha512 -i 5000 -s 512 "/dev/${ROOT_PART}"
 echo $USER_PASS | cryptsetup open "/dev/${ROOT_PART}" cryptroot
 
 ### Format the container with Btrfs
@@ -84,8 +84,8 @@ pacstrap -K /mnt base base-devel intel-ucode linux linux-firmware nvidia sbctl
 genfstab -U /mnt >> /mnt/etc/fstab
 
 ### Stage my dotfiles into the new install to be moved later
-mkdir -p /mnt/dottmp
-cp -r $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd) /mnt/dottmp
+cp -r $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../dotfiles /mnt/dottmp
+cp $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/../services/* /mnt/etc/systemd/system
 
 ### Change root to the new install
 arch-chroot /mnt /bin/bash <<CHROOT
@@ -99,10 +99,6 @@ arch-chroot /mnt /bin/bash <<CHROOT
 ln -sf "/usr/share/zoneinfo/America/New_York" /etc/localtime
 hwclock --systohc
 timedatectl set-ntp true
-
-### Make resolv.conf managed by systemd-resolved
-rm /etc/resolv.conf
-ln -s /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 
 ### Generate the locale
 sed -i 's/^#\(en_US.UTF-8 UTF-8\)/\1/' /etc/locale.gen
@@ -166,30 +162,16 @@ chmod 440 /etc/sudoers.d/00_user
 
 ### Install yay and then my preferred packages
 pacman -S --noconfirm --needed git
+sudo -u user bash <<'YAY'
 git clone https://aur.archlinux.org/yay.git /tmp/yay
-runuser -l user -c 'cd /tmp/yay && makepkg -si --noconfirm'
-runuser -l user -c 'yay -S --noconfirm --needed \
-btrfs-progs \
-hyprland \
-hyprpaper \
-hyprshot \
-iwd \
-keepassxc \
-librewolf-bin \
-mullvad-vpn-cli \
-noto-fonts \
-openrgb \
-pipewire-jack \
-pipewire-pulse \
-python-nvidia-ml-py \
-signal-desktop \
-vscodium-bin'
+cd /tmp/yay && makepkg -si --noconfirm
+yay -S --noconfirm --needed btrfs-progs hyprland hyprpaper hyprshot iwd keepassxc librewolf-bin mullvad-vpn-cli noto-fonts openrgb pipewire-jack pipewire-pulse python-nvidia-ml-py signal-desktop vscodium-bin
 
 ### Annihilate the orphans and build files
-pacman -Rcns --noconfirm $(pacman -Qttdq)
-pacman -Yc --noconfirm
+yay -Yc --noconfirm
 rm -rf /home/user/.cargo
 rm -rf /home/user/.config/go
+YAY
 
 ### Set depended-upon packages to dependency status
 pacman -D --asdeps git noto-fonts pipewire-jack
@@ -200,24 +182,17 @@ chmod 440 /etc/sudoers.d/00_user
 
 
 #################################################################################
-# SETTING CONFIGURATIONS
+# DOTFILES AND CONFIGURATIONS
 #################################################################################
 
 ### Setup dotfiles that were staged earlier
+mv /dottmp/.* /home/user
+rmdir /dottmp
 mkdir -p /home/user/.librewolf/user/chrome
 git clone https://github.com/rafaelmardojai/firefox-gnome-theme.git /tmp/fgt
 mv /tmp/fgt/theme /home/user/.librewolf/user/chrome
 mv /tmp/fgt/userChrome.css /home/user/.librewolf/user/chrome
-mv /dottmp/librewolf/user.js /home/user/.librewolf/user
-mv /dottmp/bash/.bashrc /home/user
-mv /dottmp/services/custom.service /etc/systemd/system/
-mv /dottmp/hypr /home/user/.config
-rm -rf /dottmp
-
-### Set a .bash_profile to automatically start hyprland on tty1 sign in
-echo "if [[ -z \$DISPLAY ]] && [[ \$(tty) = /dev/tty1 ]]; then" >> /home/user/.bash_profile
-echo "    exec hyprland" >> /home/user/.bash_profile
-echo "fi" >> /home/user/.bash_profile
+chown -R user:user /home/user
 
 ### Set getty to autologin the user for convenience
 mkdir -p /etc/systemd/system/getty@tty1.service.d
@@ -253,9 +228,6 @@ mullvad lockdown-mode set on
 # WRAPPING UP THE INSTALL
 #################################################################################
 
-### Ensure the user owns their own home
-chown -R user:user /home/user
-
 ### Disable NVIDIA services irrelevant to my desktop
 systemctl disable nvidia-hibernate
 systemctl disable nvidia-resume
@@ -273,8 +245,8 @@ systemctl enable mullvad-daemon
 systemctl enable systemd-resolved
 systemctl enable systemd-timesyncd
 
-### Exit chroot, unmount partitions, and reboot into the new install
+### Exit chroot and unmount partitions
 CHROOT
 umount -R /mnt
 cryptsetup close cryptroot
-reboot
+echo -e "\e[32mDone! Reboot when ready.\e[0m"
