@@ -78,7 +78,7 @@ pacman -Sy
 pacman -S --noconfirm archlinux-keyring
 
 ### Install the base system and low level components into the new install
-pacstrap -K /mnt base base-devel intel-ucode linux linux-firmware nvidia sbctl
+pacstrap -K /mnt base base-devel btrfs-progs intel-ucode linux linux-firmware nvidia sbctl
 
 ### Generate the filesystem table
 genfstab -U /mnt >> /mnt/etc/fstab
@@ -105,8 +105,8 @@ sed -i 's/^#\(en_US.UTF-8 UTF-8\)/\1/' /etc/locale.gen
 locale-gen
 echo "LANG=en_US.UTF-8" > /etc/locale.conf
 
-### Set the hostname to something generic
-echo archlinux > /etc/hostname
+### Set the hostname to something epic
+echo zenixark > /etc/hostname
 
 ### Set the root password then disable root for extra security
 echo "root:$USER_PASS" | chpasswd
@@ -118,6 +118,17 @@ echo "user:$USER_PASS" | chpasswd
 
 ### Symlink .cache to tmp to wipe it on shutdown
 ln -s /tmp /home/user/.cache
+
+### Setup dotfiles that were staged earlier
+mkdir -p /home/user/.config
+mv /dottmp/.config/* /home/user/.config
+mv /dottmp/.* /home/user
+rm -rf /dottmp
+mkdir -p /home/user/.librewolf/user/chrome
+git clone https://github.com/rafaelmardojai/firefox-gnome-theme.git /tmp/fgt
+mv /tmp/fgt/theme /home/user/.librewolf/user/chrome
+mv /tmp/fgt/userChrome.css /home/user/.librewolf/user/chrome
+chown -R user:user /home/user
 
 #################################################################################
 # SETTING UP THE BOOT PROCESS
@@ -145,11 +156,9 @@ mkdir -p /boot/EFI/BOOT
 mkinitcpio -p linux
 
 ### Setup secure boot keys and sign the UKI
-if sbctl status | grep -q "Setup Mode:     ✘ Enabled"; then
-    sbctl create-keys
-    sbctl enroll-keys --microsoft
-    sbctl sign -s /boot/EFI/BOOT/BOOTX64.EFI
-fi
+sbctl create-keys
+sbctl enroll-keys --microsoft
+sbctl sign -s /boot/EFI/BOOT/BOOTX64.EFI
 
 
 #################################################################################
@@ -163,22 +172,12 @@ chmod 440 /etc/sudoers.d/00_user
 ### Install yay and then my preferred packages
 pacman -S --noconfirm --needed git
 sudo -u user bash <<'YAY'
-#git clone https://aur.archlinux.org/yay.git /tmp/yay
-git clone --branch yay --single-branch https://github.com/archlinux/aur.git /tmp/yay
+git clone https://aur.archlinux.org/yay.git /tmp/yay
 cd /tmp/yay && makepkg -si --noconfirm
-#yay -S --noconfirm --needed btrfs-progs hyprland hyprpaper hyprshot iwd keepassxc librewolf-bin mullvad-vpn-cli noto-fonts openrgb pipewire-jack pipewire-pulse python-nvidia-ml-py signal-desktop vscodium-bin
-yay -S --noconfirm --needed btrfs-progs hyprland hyprpaper hyprshot iwd keepassxc noto-fonts openrgb pipewire-jack pipewire-pulse signal-desktop
-git clone --branch librewolf-bin --single-branch https://github.com/archlinux/aur.git /tmp/librewolf-bin
-cd /tmp/librewolf-bin && makepkg -si --noconfirm --skipinteg
-git clone --branch mullvad-vpn-cli --single-branch https://github.com/archlinux/aur.git /tmp/mullvad-vpn-cli
-cd /tmp/mullvad-vpn-cli && makepkg -si --noconfirm
-git clone --branch python-nvidia-ml-py --single-branch https://github.com/archlinux/aur.git /tmp/python-nvidia-ml-py
-cd /tmp/python-nvidia-ml-py && makepkg -si --noconfirm
-git clone --branch vscodium-bin --single-branch https://github.com/archlinux/aur.git /tmp/vscodium-bin
-cd /tmp/vscodium-bin && makepkg -si --noconfirm
+yay -S --noconfirm --needed hyprland hyprpaper hyprshot iwd keepassxc librewolf-bin mullvad-vpn-cli noto-fonts openrgb pipewire-jack pipewire-pulse python-nvidia-ml-py vscodium-bin
 
 ### Annihilate the orphans and build files
-yay -Rcns librewolf-debug mullvad-vpn-cli-debug vscodium-bin-debug python-setuptools
+yay -Rcns librewolf-bin-debug mullvad-vpn-cli-debug vscodium-bin-debug python-setuptools
 yay -Yc --noconfirm
 rm -rf /home/user/.cargo
 rm -rf /home/user/.config/go
@@ -196,15 +195,9 @@ chmod 440 /etc/sudoers.d/00_user
 # DOTFILES AND CONFIGURATIONS
 #################################################################################
 
-### Setup dotfiles that were staged earlier
-mv /dottmp/.config/* /home/user/.config
-mv /dottmp/.* /home/user
-rm -rf /dottmp
-mkdir -p /home/user/.librewolf/user/chrome
-git clone https://github.com/rafaelmardojai/firefox-gnome-theme.git /tmp/fgt
-mv /tmp/fgt/theme /home/user/.librewolf/user/chrome
-mv /tmp/fgt/userChrome.css /home/user/.librewolf/user/chrome
-chown -R user:user /home/user
+### Allow iwd to connect to the internet
+echo "[General]" > /etc/iwd/main.conf
+echo "EnableNetworkConfiguration=true" >> /etc/iwd/main.conf
 
 ### Set getty to autologin the user for convenience
 mkdir -p /etc/systemd/system/getty@tty1.service.d
@@ -229,12 +222,6 @@ sed -i 's/^#FallbackDNS=.*/FallbackDNS=/' /etc/systemd/resolved.conf
 sed -i 's/^#Domains=.*/Domains=~/' /etc/systemd/resolved.conf
 sed -i 's/^#DNSOverTLS=.*/DNSOverTLS=yes/' /etc/systemd/resolved.conf
 
-### Configure Mullvad VPN with hardened settings
-mullvad account login $MULLVAD
-mullvad relay set location any
-mullvad auto-connect set on
-mullvad lockdown-mode set on
-
 
 #################################################################################
 # WRAPPING UP THE INSTALL
@@ -256,6 +243,12 @@ systemctl enable iptables
 systemctl enable mullvad-daemon
 systemctl enable systemd-resolved
 systemctl enable systemd-timesyncd
+
+### Configure Mullvad VPN with hardened settings
+mullvad account login $MULLVAD
+mullvad relay set location any
+mullvad auto-connect set on
+mullvad lockdown-mode set on
 
 ### Exit chroot and unmount partitions
 CHROOT

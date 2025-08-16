@@ -5,8 +5,10 @@ Description=Setup NVIDIA overclocks, OpenRGB lighting, and fix my DNS resolver t
 WorkingDirectory=/tmp
 ExecStart=/bin/bash -c '\
 /usr/bin/env python -c "from pynvml import *; nvmlInit(); myGPU = nvmlDeviceGetHandleByIndex(0); nvmlDeviceSetGpcClkVfOffset(myGPU, 210); nvmlDeviceSetMemClkVfOffset(myGPU, 3000)" && \
-while ! resolvectl status wg0-mullvad | grep -q "DNS Domain:"; do sleep 0.5; done && /usr/bin/resolvectl domain wg0-mullvad "" \
 /usr/bin/openrgb --mode static --color 1f13d4 --brightness 100 && \
+sleep 1 && \
+/usr/bin/openrgb --mode static --color 1f13d4 --brightness 100 && \
+while ! resolvectl status wg0-mullvad | grep -q "DNS Domain:"; do sleep 0.5; done && /usr/bin/resolvectl domain wg0-mullvad "" \
 '
 
 [Install]

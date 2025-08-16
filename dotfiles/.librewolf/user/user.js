@@ -1,8 +1,7 @@
 // These apply my personal touches
 
 user_pref("browser.uiCustomization.state", "{\"placements\":{\"widget-overflow-fixed-list\":[],\"unified-extensions-area\":[],\"nav-bar\":[\"back-button\",\"forward-button\",\"vertical-spacer\",\"urlbar-container\",\"fxa-toolbar-menu-button\",\"ublock0_raymondhill_net-browser-action\",\"unified-extensions-button\"],\"toolbar-menubar\":[\"menubar-items\"],\"TabsToolbar\":[\"tabbrowser-tabs\"],\"vertical-tabs\":[],\"PersonalToolbar\":[\"personal-bookmarks\"]},\"seen\":[],\"dirtyAreaCache\":[],\"currentVersion\":23,\"newElementCount\":3}");
-user_pref("browser.download.useDownloadDir", true);
-user_pref("browser.download.dir", "/home/user");
+user_pref("browser.download.dir", "/home/user/");
 user_pref("toolkit.legacyUserProfileCustomizations.stylesheets", true);
 user_pref("browser.uidensity", 0);
 user_pref("svg.context-properties.content.enabled", true);
@@ -13,6 +12,7 @@ user_pref("browser.toolbars.bookmarks.visibility", "never");
 user_pref("extensions.unifiedExtensions.button.always_visible", false);
 user_pref("clipboard.autocopy", false);
 user_pref("middlemouse.paste", false);
+user_pref("browser.tabs.closeWindowWithLastTab", false);
 
 // These further harden LibreWolf on top of its already strong defaults
 
