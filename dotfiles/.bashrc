@@ -20,6 +20,8 @@ alias ls='ls -lha --color=auto --group-directories-first'
 alias grep='grep --color=auto'
 alias pacman='yay --color=auto'
 alias yay='yay --color=auto'
+alias mssd='sudo cryptsetup open /dev/sda3 cryptext && sudo mount /dev/mapper/cryptext /mnt'
+alias ussd='sudo umount -R /mnt && sudo cryptsetup close cryptext'
 
 cd() {
     builtin cd "$@" && ls
@@ -45,36 +47,12 @@ extract() {
     fi
 }
 
-mssd() {
-    local mount_point="/mnt/extssd"
-    if mountpoint -q "$mount_point"; then
-        return
-    fi
-    if [ ! -d "$mount_point" ]; then
-        sudo mkdir -p "$mount_point"
-    fi
-    sudo mount /dev/sda3 "$mount_point"
-    if [ $? -eq 0 ]; then
-        echo "Mounted successfully!"
-    fi
-}
-
-ussd() {
-    local mount_point="/mnt/extssd"
-    if mountpoint -q "$mount_point"; then
-        sudo umount "$mount_point"
-        if [ $? -eq 0 ]; then
-            sudo rmdir "$mount_point"
-        fi
-    fi
-}
-
 check() {
     declare -A package_map
     while read -r pkg; do
         package_map["$pkg"]=$(sed -E 's/-(bin|git|dev|dbg|cli|utils|common|extra|minimal|pro|plus)$//' <<< "$pkg")
     done < <(pacman -Qq)
-    local search_dirs=("$HOME" "$HOME/.config" "$HOME/.local/share" "/etc" "/var/lib" "/var/cache" "/var/log")
+    local search_dirs=("$HOME" "$HOME/.config" "$HOME/.local/share" "$HOME/.local/state" "/etc" "/var/lib" "/var/cache" "/var/log")
     local found_items=()
     for dir in "${search_dirs[@]}"; do
         [ -d "$dir" ] && while IFS= read -r -d '' item; do
@@ -118,14 +96,23 @@ filters=(
     "/home/user/.bashrc"
     "/home/user/.cache"
     "/home/user/.config"
+    "/home/user/.git"
+    "/home/user/.gitconfig"
+    "/home/user/.gitignore"
     "/home/user/.gnupg"
     "/home/user/.librewolf"
+    "/home/user/.local"
+    "/home/user/.pki"
     "/home/user/.vscode-oss"
     "/home/user/.config/dconf"
     "/home/user/.config/hypr"
     "/home/user/.config/keepassxc"
+    "/home/user/.config/pulse"
     "/home/user/.config/VSCodium"
     "/home/user/.config/yay"
+    "/home/user/.local/share/hyprland"
+    "/home/user/.local/share/recently-used.xbel"
+    "/etc/adjtime"
     "/etc/alsa"
     "/etc/arch-release"
     "/etc/audisp"
@@ -134,12 +121,10 @@ filters=(
     "/etc/bash.bash_logout"
     "/etc/bash.bashrc"
     "/etc/bindresvport.blacklist"
-    "/etc/binfmt.d"
     "/etc/ca-certificates"
     "/etc/conf.d"
     "/etc/credstore"
     "/etc/credstore.encrypted"
-    "/etc/cryptsetup-keys.d"
     "/etc/crypttab"
     "/etc/dconf"
     "/etc/debuginfod"
@@ -187,6 +172,7 @@ filters=(
     "/etc/mkinitcpio.d"
     "/etc/modules-load.d"
     "/etc/mtab"
+    "/etc/mullvad-vpn"
     "/etc/netconfig"
     "/etc/nginx"
     "/etc/nsswitch.conf"
@@ -213,7 +199,6 @@ filters=(
     "/etc/rpc"
     "/etc/securetty"
     "/etc/security"
-    "/etc/sensors.d"
     "/etc/sensors3.conf"
     "/etc/services"
     "/etc/shadow"
@@ -230,9 +215,7 @@ filters=(
     "/etc/sudoers"
     "/etc/sudoers.d"
     "/etc/sudo_logsrvd.conf"
-    "/etc/sysctl.d"
     "/etc/systemd"
-    "/etc/tmpfiles.d"
     "/etc/tpm2-tss"
     "/etc/ts.conf"
     "/etc/udev"
@@ -244,6 +227,7 @@ filters=(
     "/etc/xdg"
     "/var/cache/fontconfig"
     "/var/cache/ldconfig"
+    "/var/cache/mullvad-vpn"
     "/var/cache/private"
     "/var/lib/dbus"
     "/var/lib/iwd"
@@ -255,6 +239,7 @@ filters=(
     "/var/lib/pacman"
     "/var/lib/portables"
     "/var/lib/private"
+    "/var/lib/sbctl"
     "/var/lib/systemd"
     "/var/lib/tpm2-tss"
     "/var/lib/xkb"
@@ -262,6 +247,7 @@ filters=(
     "/var/log/btmp"
     "/var/log/journal"
     "/var/log/lastlog"
+    "/var/log/mullvad-vpn"
     "/var/log/old"
     "/var/log/pacman.log"
     "/var/log/private"

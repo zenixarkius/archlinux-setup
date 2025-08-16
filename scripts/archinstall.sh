@@ -174,7 +174,7 @@ pacman -S --noconfirm --needed git
 sudo -u user bash <<'YAY'
 git clone https://aur.archlinux.org/yay.git /tmp/yay
 cd /tmp/yay && makepkg -si --noconfirm
-yay -S --noconfirm --needed hyprland hyprpaper hyprshot iwd keepassxc librewolf-bin mullvad-vpn-cli noto-fonts openrgb pipewire-jack pipewire-pulse python-nvidia-ml-py vscodium-bin
+yay -S --noconfirm --needed alacritty hyprland hyprpaper hyprshot iwd keepassxc librewolf-bin mullvad-vpn-cli neovim noto-fonts openrgb pipewire-jack pipewire-pulse python-nvidia-ml-py signal-desktop
 
 ### Annihilate the orphans and build files
 yay -Rcns librewolf-bin-debug mullvad-vpn-cli-debug vscodium-bin-debug python-setuptools

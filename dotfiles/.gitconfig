@@ -4,3 +4,7 @@
 	signingkey = 183246F242D3C9BD
 [commit]
 	gpgSign = true
+[core]
+	pager = cat
+[color]
+	ui = always
