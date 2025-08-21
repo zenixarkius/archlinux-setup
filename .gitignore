@@ -1,16 +1,1 @@
-*
-
-!.git*
-!.bashrc
-!.bash_profile
-!.config/
-
-!.librewolf/
-!.librewolf/user
-!.librewolf/user/user.js
-
-!.local
-!.local/bin/
-!.local/bin/*
-
-!hypr*
+*.png
