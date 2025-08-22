@@ -21,6 +21,8 @@ user_pref("extensions.formautofill.addresses.enabled", false);
 user_pref("network.trr.mode", 5);
 user_pref("signon.rememberSignons", false);
 user_pref("datareporting.usage.uploadEnabled", false);
+user_pref("dom.push.connection.enabled", false);
+user_pref("services.settings.server", "");
 user_pref("identity.fxaccounts.enabled", false);
 user_pref("webgl.disabled", true);
 user_pref("browser.search.separatePrivateDefault", false);

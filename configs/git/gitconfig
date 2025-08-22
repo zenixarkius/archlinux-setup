@@ -8,3 +8,5 @@
 	pager = cat
 [color]
 	ui = always
+[credential]
+	helper = cache --timeout=0
