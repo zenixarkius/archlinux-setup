@@ -16,9 +16,17 @@ user_pref("browser.tabs.closeWindowWithLastTab", false);
 
 // These further harden LibreWolf on top of its already strong defaults
 
+user_pref("extensions.formautofill.creditCards.enabled", false);
+user_pref("extensions.formautofill.addresses.enabled", false);
+user_pref("network.trr.mode", 5);
+user_pref("signon.rememberSignons", false);
+user_pref("datareporting.usage.uploadEnabled", false);
+user_pref("identity.fxaccounts.enabled", false);
+user_pref("webgl.disabled", true);
 user_pref("browser.search.separatePrivateDefault", false);
 user_pref("browser.translations.enable", false);
 user_pref("browser.newtabpage.activity-stream.showSearch", false);
+user_pref("browser.newtabpage.activity-stream.showSponsoredCheckboxes", false);
 user_pref("browser.urlbar.showSearchTerms.enabled", false);
 user_pref("browser.urlbar.suggest.recentsearches", false);
 user_pref("browser.urlbar.suggest.bookmark", false);
@@ -35,9 +43,17 @@ user_pref("privacy.clearOnShutdown_v2.formdata", true);
 user_pref("privacy.clearOnShutdown_v2.siteSettings", true);
 user_pref("extensions.update.autoUpdateDefault", false);
 user_pref("extensions.update.enabled", false);
-user_pref("network.dns.disableIPv6", false);
+user_pref("network.dns.disableIPv6", true);
 user_pref("network.http.referer.XOriginPolicy", 2);
+user_pref("privacy.resistFingerprinting", true);
 user_pref("privacy.resistFingerprinting.letterboxing", true);
 user_pref("privacy.resistFingerprinting.letterboxing.dimensions", "1600x900");
+user_pref("browser.safebrowsing.malware.enabled", false);
+user_pref("browser.safebrowsing.phishing.enabled", false);
+user_pref("browser.safebrowsing.blockedURIs.enabled", false);
+user_pref("browser.safebrowsing.provider.google4.gethashURL", "");
+user_pref("browser.safebrowsing.provider.google4.updateURL", "");
+user_pref("browser.safebrowsing.provider.google.gethashURL", "");
+user_pref("browser.safebrowsing.provider.google.updateURL", "");
 user_pref("browser.startup.homepage", "chrome://browser/content/blanktab.html");
 user_pref("browser.newtabpage.enabled", false);

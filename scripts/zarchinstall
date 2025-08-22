@@ -188,7 +188,8 @@ mkdir -p /home/user/.config /home/user/.librewolf/user/chrome
 ln -sf /home/user/.zenixark/configs/bash/bashrc /home/user/.bashrc
 ln -sf /home/user/.zenixark/configs/bash/bash_profile /home/user/.bash_profile
 ln -sf /home/user/.zenixark/configs/git/gitconfig /home/user/.gitconfig
-ln -sf /home/user/.zenixark/configs/hypr /home/user/.config/hypr
+ln -sf /home/user/.zenixark/configs/hypr/hyprland.conf /home/user/.config/hypr/hyprland.conf
+ln -sf /home/user/.zenixark/configs/hypr/hyprpaper.conf /home/user/.config/hypr/hyprpaper.conf
 ln -sf /home/user/.zenixark/configs/librewolf/user.js /home/user/.librewolf/user/user.js
 ln -sf /home/user/.zenixark/configs/librewolf/chrome /home/user/.librewolf/user/chrome
 ln -sf /home/user/.zenixark/configs/systemd/custom.service /etc/systemd/system/custom.service
