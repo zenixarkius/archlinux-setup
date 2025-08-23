@@ -1,7 +1,7 @@
 # ⚙️ Zenixark's Arch Linux Setup
 **My dotfiles + automated installation and utility scripts, all focused on hardening, minimalism, and performance.**
 
-```
+<pre>
 [user@zenixark ~]$ fastfetch
                   -`                     user@zenixark
                  .o+`                    -------------
@@ -22,8 +22,8 @@
  `+sso+:-`                 `.-/+oso:     GPU 2: Intel UHD Graphics 770 @ 1.60 GHz [Integrated]
 `++:.                           `-/+/    Memory: 1.45 GiB / 31.11 GiB (5%)
 .`                                 `/    Disk (/): 3.03 GiB / 930.50 GiB (0%) - btrfs
-[user@archlinux ~]$ yay -Rcns fastfetch
-```
+[user@zenixark ~]$ yay -Rcns fastfetch
+</pre>
 
 ## 📁 Repo Contents
 > [!CAUTION]
@@ -35,51 +35,51 @@
     ├── configs
     │   ├── bash
     │   │   ├── <a href="./configs/bash/bash_profile">bash_profile</a>
-    │   │   └── <a href="./configs/bash/bashrc">bashrc</a>                # Various QOL aliases and functions especially for file management
+    │   │   └── <a href="./configs/bash/bashrc">bashrc</a>            # Various QOL aliases and functions esp. for file management
     │   ├── git
     │   │   └── <a href="./configs/git/gitconfig">gitconfig</a>
     │   ├── hypr
-    │   │   ├── <a href="./configs/hypr/hyprland.conf">hyprland.conf</a>         # Mostly stock settings but a peek into how I use hyprland
+    │   │   ├── <a href="./configs/hypr/hyprland.conf">hyprland.conf</a>
     │   │   ├── <a href="./configs/hypr/hyprpaper.conf">hyprpaper.conf</a>
     │   │   ├── <a href="./configs/hypr/sigiluw.png">sigiluw.png</a>
     │   │   └── <a href="./configs/hypr/sigilw.png">sigilw.png</a>
     │   ├── librewolf
-    │   │   ├── <a href="https://github.com/rafaelmardojai/firefox-gnome-theme">chrome</a>                # firefox-gnome-theme
-    │   │   └── <a href="./configs/librewolf/user.js">user.js</a>               # Extra hardening and QOL over LibreWolf's already great defaults
+    │   │   ├── <a href="https://github.com/rafaelmardojai/firefox-gnome-theme">chrome</a>            # firefox-gnome-theme
+    │   │   └── <a href="./configs/librewolf/user.js">user.js</a>           # Extra hardening over LibreWolf's already great defaults
     │   └── systemd
-    │       └── <a href="./configs/systemd/custom.service">custom.service</a>        # Sets my GPU overclocks and sets static RGB colors on startup
+    │       └── <a href="./configs/systemd/custom.service">custom.service</a>    # Sets GPU overclocks and static RGB colors on startup
     └── scripts
-        ├── <a href="./scripts/leftovers">leftovers</a>                 # Scans common junk dirs and outputs files not tracked in my custom filters.
-        └── <a href="./scripts/zarchinstall">zarchinstall</a>              # Automated Arch installer and sets up my disks, hardening, configs, and more.
+        ├── <a href="./scripts/leftovers">leftovers</a>             # Scans common junk dirs and outputs files not in custom filters
+        └── <a href="./scripts/zarchinstall">zarchinstall</a>          # Sets up disks, packages, hardening, dots, and more
 [user@zenixark ~]$ yay -Rcns tree
 </pre>
 
 ## 🧰 Software Preferences
 I generally prefer to avoid proprietary and GUI nonsense whenever possible in favor of FOSS and CLI stuff respectively, as well as avoiding having anything I don't actively need installed.
 > *Anything important that's not visible is a dep of one of these, like `noto-fonts` is a dep of `librewolf-bin`.*
-```
+<pre>
 [user@zenixark ~]$ yay -Qqe
-alacritty                             # Terminal
+alacritty                         # Terminal
 base
 base-devel
 btrfs-progs
-hyprland                              # Window Manager
-hyprpaper                             # Wallpaper
-hyprshot                              # Screenshots
+hyprland                          # Window Manager
+hyprpaper                         # Wallpaper
+hyprshot                          # Screenshots
 intel-ucode
-iwd                                   # Wi-Fi (+ systemd-resolved)
-keepassxc                             # Password Manager
-librewolf-bin                         # Browser
-linux                                 # Kernel
+iwd                               # Wi-Fi (+ systemd-resolved)
+keepassxc                         # Password Manager
+librewolf-bin                     # Browser
+linux                             # Kernel
 linux-firmware
-mullvad-vpn-cli                       # VPN
-neovim                                # Text Editor
-nvidia                                # GPU
+mullvad-vpn-cli                   # VPN
+neovim                            # Text Editor
+nvidia                            # GPU
 openrgb
-pipewire-pulse                        # Audio
+pipewire-pulse                    # Audio
 python-nvidia-ml-py
 sbctl
 signal-desktop
-yay                                   # AUR
+yay                               # AUR
 [user@zenixark ~]$ yay -Rcns ya^C
-```
+</pre>

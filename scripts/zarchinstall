@@ -1,7 +1,6 @@
 #!/bin/bash
 set -euo pipefail
 
-
 #################################################################################
 # PREPARATION FOR INSTALL
 #################################################################################
@@ -133,7 +132,6 @@ cat <<UKI > /etc/mkinitcpio.d/linux.preset
 ALL_config="/etc/mkinitcpio.conf"
 ALL_kver="/boot/vmlinuz-linux"
 PRESETS=('default')
-
 default_uki="/boot/EFI/BOOT/BOOTX64.EFI"
 default_options="--cmdline /etc/kernel/cmdline"
 UKI
@@ -192,7 +190,7 @@ ln -sf /home/user/.zenixark/configs/hypr/hyprland.conf /home/user/.config/hypr/h
 ln -sf /home/user/.zenixark/configs/hypr/hyprpaper.conf /home/user/.config/hypr/hyprpaper.conf
 ln -sf /home/user/.zenixark/configs/librewolf/user.js /home/user/.librewolf/user/user.js
 ln -sf /home/user/.zenixark/configs/librewolf/chrome /home/user/.librewolf/user/chrome
-ln -sf /home/user/.zenixark/configs/systemd/custom.service /etc/systemd/system/custom.service
+systemctl link /home/user/.zenixark/configs/systemd/custom.service
 chown -R user:user /home/user
 
 ### Allow iwd to connect to the internet
