@@ -6,9 +6,11 @@
 [[ "$(whoami)" = "root" ]] && return
 [[ -z "$FUNCNEST" ]] && export FUNCNEST=100
 
+# zsh who?
 bind '"\e[A":history-search-backward'
 bind '"\e[B":history-search-forward'
 
+# Make the bash history file functionally infinite and sync terminal history
 shopt -s histappend
 export PROMPT_COMMAND="history -a; history -n; $PROMPT_COMMAND"
 export HISTCONTROL=ignoredups:erasedups
@@ -22,6 +24,8 @@ alias ls='ls -lha --color=auto --group-directories-first'
 alias grep='grep --color=auto'
 alias pacman='yay --color=auto'
 alias yay='yay --color=auto'
+
+# Easy un/mounting of my external SSD
 alias mssd='sudo cryptsetup open /dev/sda3 cryptext && sudo mount /dev/mapper/cryptext /mnt'
 alias ussd='sudo umount -R /mnt && sudo cryptsetup close cryptext'
 
@@ -29,6 +33,7 @@ cd() {
     builtin cd "$@" && ls
 }
 
+# Replace mullvad with a function that fixes the tug-of-war effect between my VPN and resolved after each command
 mullvad() {
     command mullvad "$@" &&
     while ! resolvectl status wg0-mullvad | grep -q "DNS Domain:"; do
@@ -36,14 +41,15 @@ mullvad() {
     done && sudo resolvectl domain wg0-mullvad ""
 }
 
+# Extract archive based on file type
 extract() {
     if [ -f "$1" ]; then
         case "$1" in
-            *.tar.gz)    tar xvzf "$1"    ;;
-            *.tgz)       tar xvzf "$1"    ;;
-            *.tar.xz)    tar xvJf "$1"    ;;
-            *.tar)       tar xvf "$1"     ;;
-            *.zip)       unzip "$1"       ;;
+            *.tar.gz)    tar xvzf "$1" ;;
+            *.tgz)       tar xvzf "$1" ;;
+            *.tar.xz)    tar xvJf "$1" ;;
+            *.tar)       tar xvf "$1" ;;
+            *.zip)       yay -S unzip && unzip "$1" yay -Rcns unzip ;;
             *)           echo "'$1' cannot be extracted" ;;
         esac
     fi

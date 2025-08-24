@@ -14,3 +14,12 @@
 	tool = nvimdiff
 [difftool "nvimdiff"]
 	cmd = nvim -d $LOCAL $REMOTE
+[alias]
+	d = diff --cached
+	l = log --oneline --graph --decorate --all
+	c = commit
+	a = add .
+	p = push -u origin main
+	s = status
+	pf = push --force -u origin main
+	am = commit --amend --no-edit

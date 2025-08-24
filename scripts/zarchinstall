@@ -12,7 +12,6 @@ while [[ "$#" -gt 0 ]]; do
         -r) ROOT_PART="$2"; shift ;;
         -p) USER_PASS="$2"; shift ;;
         -n) NEXTDNS="$2"; shift ;;
-        -m) MULLVAD="$2"; shift ;;
         -wi) WIFI_INT="$2"; shift ;;
         -wn) WIFI_NAME="$2"; shift ;;
         -wp) WIFI_PASS="$2"; shift ;;
