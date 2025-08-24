@@ -9,4 +9,8 @@
 [color]
 	ui = always
 [credential]
-	helper = cache --timeout=0
+	helper = store --file=/tmp/git-credentials
+[diff]
+	tool = nvimdiff
+[difftool "nvimdiff"]
+	cmd = nvim -d $LOCAL $REMOTE

@@ -182,7 +182,7 @@ chmod 440 /etc/sudoers.d/00_user
 
 ### Setup dotfiles that were staged earlier
 mv /.zenixark /home/user
-mkdir -p /home/user/.config /home/user/.librewolf/user/chrome
+mkdir -p /home/user/.config/hypr /home/user/.librewolf/user /home/user/.config/nvim
 ln -sf /home/user/.zenixark/configs/bash/bashrc /home/user/.bashrc
 ln -sf /home/user/.zenixark/configs/bash/bash_profile /home/user/.bash_profile
 ln -sf /home/user/.zenixark/configs/git/gitconfig /home/user/.gitconfig
@@ -190,6 +190,7 @@ ln -sf /home/user/.zenixark/configs/hypr/hyprland.conf /home/user/.config/hypr/h
 ln -sf /home/user/.zenixark/configs/hypr/hyprpaper.conf /home/user/.config/hypr/hyprpaper.conf
 ln -sf /home/user/.zenixark/configs/librewolf/user.js /home/user/.librewolf/user/user.js
 ln -sf /home/user/.zenixark/configs/librewolf/chrome /home/user/.librewolf/user/chrome
+ln -sf /home/user/.zenixark/configs/nvim/init.lua /home/user/.config/nvim/init.lua
 systemctl link /home/user/.zenixark/configs/systemd/custom.service
 chown -R user:user /home/user
 

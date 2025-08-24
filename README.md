@@ -44,8 +44,10 @@
     │   │   ├── <a href="./configs/hypr/sigiluw.png">sigiluw.png</a>
     │   │   └── <a href="./configs/hypr/sigilw.png">sigilw.png</a>
     │   ├── librewolf
-    │   │   ├── <a href="https://github.com/rafaelmardojai/firefox-gnome-theme">chrome</a>            # firefox-gnome-theme
+    │   │   ├── <a href="./configs/librewolf/chrome">chrome</a>            # <a href="https://github.com/rafaelmardojai/firefox-gnome-theme">firefox-gnome-theme</a>
     │   │   └── <a href="./configs/librewolf/user.js">user.js</a>           # Extra hardening over LibreWolf's already great defaults
+    │   ├── nvim
+    │   │   └── <a href="./configs/nvim/init.lua">init.lua</a>
     │   └── systemd
     │       └── <a href="./configs/systemd/custom.service">custom.service</a>    # Sets GPU overclocks and static RGB colors on startup
     └── scripts
