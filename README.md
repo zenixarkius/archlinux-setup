@@ -33,6 +33,8 @@
 ~
 └── .zenixark
     ├── configs
+    │   ├── alacritty
+    │   │   └── <a href="./configs/alacritty/alacritty.toml">alacritty.toml</a>
     │   ├── bash
     │   │   ├── <a href="./configs/bash/bash_profile">bash_profile</a>
     │   │   └── <a href="./configs/bash/bashrc">bashrc</a>            # Various QOL aliases and functions esp. for file management
@@ -82,6 +84,7 @@ pipewire-pulse                    # Audio
 python-nvidia-ml-py
 sbctl
 signal-desktop
+ttf-hack-nerd
 yay                               # AUR
 [user@zenixark ~]$ yay -Rcns ya^C
 </pre>

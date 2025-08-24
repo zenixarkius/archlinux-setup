@@ -22,4 +22,5 @@
 	p = push -u origin main
 	s = status
 	pf = push --force -u origin main
-	am = commit --amend --no-edit
+	ad = commit --amend --no-edit
+	gcc = gc --prune=now --aggressive
