@@ -10,9 +10,7 @@
 bind '"\e[A":history-search-backward'
 bind '"\e[B":history-search-forward'
 
-# Make the bash history file functionally infinite and sync terminal history
-shopt -s histappend
-export PROMPT_COMMAND="history -a; history -n; $PROMPT_COMMAND"
+# Make the bash history file functionally infinite
 export HISTCONTROL=ignoredups:erasedups
 export HISTSIZE=10000
 export HISTFILESIZE=20000

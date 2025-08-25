@@ -159,7 +159,7 @@ pacman -S --noconfirm --needed git
 sudo -u user bash <<'YAY'
 git clone https://aur.archlinux.org/yay.git /tmp/yay
 cd /tmp/yay && makepkg -si --noconfirm
-yay -S --noconfirm --needed foot hyprland hyprpaper hyprshot iwd keepassxc librewolf-bin mullvad-vpn-cli neovim noto-fonts openrgb pipewire-jack pipewire-pulse python-nvidia-ml-py signal-desktop ttf-hack-nerd
+yay -S --noconfirm --needed foot hyprland hyprpaper hyprshot iwd keepassxc librewolf-bin mullvad-vpn-cli neovim noto-fonts openrgb pipewire-jack pipewire-pulse python-nvidia-ml-py ttf-hack-nerd
 
 ### Annihilate the orphans and build files
 yay -Rcns librewolf-bin-debug mullvad-vpn-cli-debug python-setuptools
@@ -182,15 +182,15 @@ chmod 440 /etc/sudoers.d/00_user
 ### Setup dotfiles that were staged earlier
 mv /.zenixark /home/user
 mkdir -p /home/user/.config/hypr /home/user/.librewolf/user /home/user/.config/nvim
-ln -sf /home/user/.zenixark/configs/bash/bashrc /home/user/.bashrc
-ln -sf /home/user/.zenixark/configs/bash/bash_profile /home/user/.bash_profile
-ln -sf /home/user/.zenixark/configs/git/gitconfig /home/user/.gitconfig
-ln -sf /home/user/.zenixark/configs/hypr/hyprland.conf /home/user/.config/hypr/hyprland.conf
-ln -sf /home/user/.zenixark/configs/hypr/hyprpaper.conf /home/user/.config/hypr/hyprpaper.conf
-ln -sf /home/user/.zenixark/configs/librewolf/user.js /home/user/.librewolf/user/user.js
-ln -sf /home/user/.zenixark/configs/librewolf/chrome /home/user/.librewolf/user/chrome
-ln -sf /home/user/.zenixark/configs/nvim/init.lua /home/user/.config/nvim/init.lua
-systemctl link /home/user/.zenixark/configs/systemd/custom.service
+ln -sf /home/user/.zenixark/bash/bashrc /home/user/.bashrc
+ln -sf /home/user/.zenixark/bash/bash_profile /home/user/.bash_profile
+ln -sf /home/user/.zenixark/git/gitconfig /home/user/.gitconfig
+ln -sf /home/user/.zenixark/hypr/hyprland.conf /home/user/.config/hypr/hyprland.conf
+ln -sf /home/user/.zenixark/hypr/hyprpaper.conf /home/user/.config/hypr/hyprpaper.conf
+ln -sf /home/user/.zenixark/librewolf/user.js /home/user/.librewolf/user/user.js
+ln -sf /home/user/.zenixark/librewolf/chrome /home/user/.librewolf/user/chrome
+ln -sf /home/user/.zenixark/nvim/init.lua /home/user/.config/nvim/init.lua
+systemctl link /home/user/.zenixark/systemd/custom.service
 chown -R user:user /home/user
 
 ### Allow iwd to connect to the internet
