@@ -33,8 +33,6 @@
 ~
 └── .zenixark
     ├── configs
-    │   ├── alacritty
-    │   │   └── <a href="./configs/alacritty/alacritty.toml">alacritty.toml</a>
     │   ├── bash
     │   │   ├── <a href="./configs/bash/bash_profile">bash_profile</a>
     │   │   └── <a href="./configs/bash/bashrc">bashrc</a>            # Various QOL aliases and functions esp. for file management
@@ -63,10 +61,10 @@ I generally prefer to avoid proprietary and GUI nonsense whenever possible in fa
 > *Anything important that's not visible is a dep of one of these, like `noto-fonts` is a dep of `librewolf-bin`.*
 <pre>
 [user@zenixark ~]$ yay -Qqe
-alacritty                         # Terminal
 base
 base-devel
 btrfs-progs
+foot                              # Terminal
 hyprland                          # Window Manager
 hyprpaper                         # Wallpaper
 hyprshot                          # Screenshots
